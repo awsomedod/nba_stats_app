@@ -94,8 +94,8 @@ def player_to_dict(player):
 
 def team_to_dict(team):
     return {
-        'id': team.id,
-        'name': team.name,
+        'team_id': team.id,
+        'team_name': team.name,
         'players': [{'player_id': player.id, 'player_name': player.name} for player in team.players]
     }
 
