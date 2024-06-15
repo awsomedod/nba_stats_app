@@ -145,6 +145,7 @@ def get_player_stats(player_id):
         return jsonify({'message': 'Player does not exist'}), 404
     api_id = player.api_id
     stats = get_player_current_season_average_stats(api_id)
+    return "What"
     return jsonify({'player':player_to_dict(player), 'stats':stats}, 200)
 
 @app.route('/players/search', methods=['GET'])
