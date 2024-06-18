@@ -23,18 +23,16 @@ class User(db.Model):
 class Player(db.Model):
     __tablename__ = 'players'
     id = db.Column(db.Integer, primary_key=True)
-    api_id = db.Column(db.Integer, unique=True)
     name = db.Column(db.String(255), nullable=False)
-    team_id = db.Column(db.Integer, db.ForeignKey('teams.id', ondelete='SET NULL'))
-    team = db.relationship('Team', back_populates='players')
+    season_stats = db.relationship('SeasonStats', backref='player', lazy='dynamic')
     fans = db.relationship('User', secondary='user_favorite_players', back_populates='favorite_players')
 
 class Team(db.Model):
     __tablename__ = 'teams'
     id = db.Column(db.Integer, primary_key=True)
-    api_id = db.Column(db.Integer, unique=True)
-    name = db.Column(db.String(255), nullable=False)
-    players = db.relationship('Player', back_populates='team')
+    year = db.Column(db.Integer, nullable=False)
+    team_name = db.Column(db.String(255), nullable=False)
+    players = db.relationship('SeasonStats', backref='team', lazy='dynamic')
     fans = db.relationship('User', secondary='user_favorite_teams', back_populates='favorite_teams')
 
 class User_Favorite_Players(db.Model):
@@ -46,3 +44,36 @@ class User_Favorite_Teams(db.Model):
     __tablename__ = 'user_favorite_teams'
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
     team_id = db.Column(db.Integer, db.ForeignKey('teams.id', ondelete='CASCADE'), primary_key=True)
+
+class SeasonStats(db.Model):
+    __tablename__ = 'season_stats'
+    id = db.Column(db.Integer, primary_key=True)
+    player_id = db.Column(db.Integer, db.ForeignKey('players.id'))
+    team_id = db.Column(db.Integer, db.ForeignKey('teams.id'))
+    pos = db.Column(db.String(50))
+    age = db.Column(db.Integer)
+    G = db.Column(db.Integer)
+    GS = db.Column(db.Integer)
+    MP = db.Column(db.Float)
+    FG = db.Column(db.Float)
+    FGA = db.Column(db.Float)
+    FG_perc = db.Column(db.Float)
+    threep = db.Column(db.Float)
+    threepa = db.Column(db.Float)
+    threep_perc = db.Column(db.Float)
+    twop = db.Column(db.Float)
+    twopa = db.Column(db.Float)
+    twop_perc = db.Column(db.Float)
+    eFG_perc = db.Column(db.Float)
+    FT = db.Column(db.Float)
+    FTA = db.Column(db.Float)
+    FT_perc = db.Column(db.Float)
+    ORB = db.Column(db.Float)
+    DRB = db.Column(db.Float)
+    TRB = db.Column(db.Float)
+    AST = db.Column(db.Float)
+    STL = db.Column(db.Float)
+    BLK = db.Column(db.Float)
+    TOV = db.Column(db.Float)
+    PF = db.Column(db.Float)
+    PTS = db.Column(db.Float)
