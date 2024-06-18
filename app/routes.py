@@ -92,12 +92,12 @@ def player_to_dict(player):
 
 def team_to_dict(team):
     players_info = []
-    for player in team.players:
-        name = Player.query.get(player.player_id).name
-        players_info.append({'player_id': player.id, 'player_name': name})
+    for stats in team.players:
+        player = Player.query.get(stats.player_id)
+        players_info.append({'player_id': player.id, 'player_name': player.name})
     return {
         'team_id': team.id,
-        'team_name': team.name,
+        'team_name': team.team_name,
         'players': players_info
     }
 
@@ -164,7 +164,7 @@ def search_players():
         return jsonify({'message': 'No players found matching the search criteria'}), 404
 
     # Convert the list of player objects to a list of dictionaries
-    players_list = [{player.name: [player.id, player.team.name if player.team else "Free Agent"]} for player in players]
+    players_list = [{player.name: player.id} for player in players]
     return jsonify({'players': players_list}), 200
 
 @app.route('/teams/search', methods=['GET'])
@@ -175,12 +175,12 @@ def search_teams():
         return jsonify({'message': 'No search query provided'}), 400
 
     # Search for players whose name contains the query, case-insensitive
-    teams = Team.query.filter(Team.name.ilike(f'%{name_query}%')).all()
+    teams = Team.query.filter(Team.team_name.ilike(f'%{name_query}%')).all()
     if not teams:
         return jsonify({'message': 'No teams found matching the search criteria'}), 404
 
     # Convert the list of player objects to a list of dictionaries
-    team_list = [{team.name: team.id} for team in teams]
+    team_list = [{team.team_name: team.id} for team in teams]
     return jsonify({'teams': team_list}), 200
 
 @app.route('/teams/<int:team_id>', methods=['GET'])
