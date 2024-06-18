@@ -2,8 +2,8 @@ import jwt
 import datetime
 from flask import request, jsonify, g
 from jwt import ExpiredSignatureError, DecodeError, InvalidTokenError
-from .models import db, User, Player, Team
-from .external import get_player_current_season_average_stats, get_team_current_season_average_stats
+from .models import db, User, Player, Team, SeasonStats
+from .external import get_player_all_season_average
 from . import create_app
 
 app = create_app()
@@ -88,15 +88,17 @@ def player_to_dict(player):
     return {
         'player_id': player.id,
         'player_name': player.name,
-        'team_id': player.team_id,
-        'team_name': Team.query.get(player.team_id).name # You can include more attributes as needed
     }
 
 def team_to_dict(team):
+    players_info = []
+    for player in team.players:
+        name = Player.query.get(player.player_id).name
+        players_info.append({'player_id': player.id, 'player_name': name})
     return {
         'team_id': team.id,
         'team_name': team.name,
-        'players': [{'player_id': player.id, 'player_name': player.name} for player in team.players]
+        'players': players_info
     }
 
 @app.route('/users/<int:id>', methods=['GET'])
@@ -137,16 +139,16 @@ def delete_user(id):
     db.session.commit()
     return jsonify({'message': 'User deleted successfully'}), 200
 
+
 @app.route('/players/<int:player_id>', methods=['GET'])
-def get_player_stats(player_id):
+def get_player(player_id):
     # Check if the player exists in the database
     player = Player.query.get(player_id)
     if not player:
         return jsonify({'message': 'Player does not exist'}), 404
-    api_id = player.api_id
-    stats = get_player_current_season_average_stats(api_id)
-    return "What"
+    stats = get_player_all_season_average(player)
     return jsonify({'player':player_to_dict(player), 'stats':stats}, 200)
+
 
 @app.route('/players/search', methods=['GET'])
 def search_players():
@@ -171,7 +173,6 @@ def search_teams():
     name_query = request.args.get('name')
     if not name_query:
         return jsonify({'message': 'No search query provided'}), 400
-    print(name_query)
 
     # Search for players whose name contains the query, case-insensitive
     teams = Team.query.filter(Team.name.ilike(f'%{name_query}%')).all()
@@ -183,14 +184,12 @@ def search_teams():
     return jsonify({'teams': team_list}), 200
 
 @app.route('/teams/<int:team_id>', methods=['GET'])
-def get_team_stats(team_id):
+def get_team(team_id):
     # Check if the team exists in the database
     team = Team.query.get(team_id)
     if not team:
         return jsonify({'message': 'Team does not exist'}), 404
-    api_id = team.api_id
-    stats = get_team_current_season_average_stats(api_id)
-    return jsonify({'team':team_to_dict(team), 'stats':stats}, 200)
+    return jsonify({'team':team_to_dict(team)}, 200)
 
 @app.route('/users/<int:userId>/favorites/players', methods=['POST'])
 @token_required
