@@ -2,7 +2,7 @@ import jwt
 import datetime
 from flask import request, jsonify, g
 from jwt import ExpiredSignatureError, DecodeError, InvalidTokenError
-from .models import db, User, Player, Team, SeasonStats
+from .models import db, User, Player, Team, User_Favorite_Players, User_Favorite_Teams
 from .external import get_player_all_season_average
 import base64
 from . import create_app
@@ -173,7 +173,13 @@ def search_players():
         return jsonify({'message': 'No players found matching the search criteria'}), 404
 
     # Convert the list of player objects to a list of dictionaries
-    players_list = [{player.name: player.id} for player in players]
+    players_list = []
+    for player in players:
+        if player.picture_data:
+            picture_data = base64.b64encode(player.picture_data).decode('utf-8')
+        else:
+            picture_data = None
+        players_list.append({'id': player.id, 'name': player.name, 'picture': picture_data})
     return jsonify({'players': players_list}), 200
 
 @app.route('/teams/search', methods=['GET'])
@@ -314,6 +320,35 @@ def remove_favorite_team(userId):
     db.session.commit()
 
     return jsonify({'message': 'Team removed from favorites'}), 200
+
+@app.route('/top-players', methods=['GET'])
+def get_top_players():
+    # Query to get the top 5 players with the most fans
+    top_players = db.session.query(
+        Player.id, Player.name, Player.picture_data, db.func.count(User_Favorite_Players.user_id).label('fan_count')
+    ).join(User_Favorite_Players).group_by(Player.id, Player.name, Player.picture_data).order_by(db.desc('fan_count')).limit(5).all()
+
+    result = []
+
+    for player in top_players:
+        if player.picture_data:
+            picture_data = base64.b64encode(player.picture_data).decode('utf-8')
+        else:
+            picture_data = None
+        result.append({'id': player.id, 'name': player.name, 'fan_count': player.fan_count, 'picture': picture_data})
+    
+    return jsonify(result)
+
+@app.route('/top-teams', methods=['GET'])
+def get_top_teams():
+    # Query to get the top 5 teams with the most fans
+    top_teams = db.session.query(
+        Team.id, Team.team_name, db.func.count(User_Favorite_Teams.user_id).label('fan_count')
+    ).join(User_Favorite_Teams).group_by(Team.id, Team.team_name).order_by(db.desc('fan_count')).limit(5).all()
+    
+    # Convert to list of dicts to make it serializable
+    result = [{'id': team.id, 'name': team.team_name, 'fan_count': team.fan_count} for team in top_teams]
+    return jsonify(result)
 
 @app.route('/')
 def home():

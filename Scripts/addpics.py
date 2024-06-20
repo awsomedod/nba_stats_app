@@ -41,7 +41,14 @@ def insert_data():
             # Find the player in the database
             player = Player.query.filter_by(name=player_name).first()
 
+            # If not found, try adding an asterisk
+            if not player:
+                player = Player.query.filter_by(name=player_name + '*').first()
+
             if player:
+                if '*' in player.name:
+                    player.name = player.name.replace('*', '')
+                    print(f"Removed asterisk from name: {player.name}")
                 # Update the picture_data column with the binary data
                 player.picture_data = image_data
                 db.session.commit()
