@@ -24,6 +24,7 @@ class Player(db.Model):
     __tablename__ = 'players'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
+    picture_data = db.Column(db.LargeBinary)  # New column for storing picture data
     season_stats = db.relationship('SeasonStats', backref='player', lazy='dynamic')
     fans = db.relationship('User', secondary='user_favorite_players', back_populates='favorite_players')
 

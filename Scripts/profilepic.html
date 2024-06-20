@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Player Image</title>
+</head>
+<body>
+    <h1>Player Information</h1>
+    <img id="playerImage" src="" alt="Player Image">
+    <div id="playerInfo"></div>
+
+    <script>
+        // Example fetch request to your API
+        fetch('http://localhost:5000/players/7411')  // Change the URL and player ID as needed
+            .then(response => response.json())
+            .then(data => {
+                const imageElement = document.getElementById('playerImage');
+                const infoElement = document.getElementById('playerInfo');
+
+                if (data[0].picture) {
+                    imageElement.src = 'data:image/png;base64,' + data[0].picture;
+                } else {
+                    imageElement.alt = 'No image available';
+                }
+
+                infoElement.innerHTML = `
+                    <p>Name: ${data[0].player.name}</p>
+                    <p>Stats: ${JSON.stringify(data[0].stats)}</p>
+                `;
+            })
+            .catch(error => console.error('Error:', error));
+    </script>
+</body>
+</html>

@@ -4,6 +4,7 @@ from flask import request, jsonify, g
 from jwt import ExpiredSignatureError, DecodeError, InvalidTokenError
 from .models import db, User, Player, Team, SeasonStats
 from .external import get_player_all_season_average
+import base64
 from . import create_app
 
 app = create_app()
@@ -147,7 +148,15 @@ def get_player(player_id):
     if not player:
         return jsonify({'message': 'Player does not exist'}), 404
     stats = get_player_all_season_average(player)
-    return jsonify({'player':player_to_dict(player), 'stats':stats}, 200)
+
+
+    # Retrieve and encode the picture data if it exists
+    if player.picture_data:
+        picture_data = base64.b64encode(player.picture_data).decode('utf-8')
+    else:
+        picture_data = None
+
+    return jsonify({'player':player_to_dict(player), 'picture': picture_data, 'stats':stats}, 200)
 
 
 @app.route('/players/search', methods=['GET'])

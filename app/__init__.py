@@ -15,6 +15,7 @@ def create_app():
     jwt.init_app(app)
     db.init_app(app)
     bcrypt.init_app(app)
+    migrate = Migrate(app, db)
 
     with app.app_context():
         db.create_all()  # Creates the tables if they don't exist
