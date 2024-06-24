@@ -86,19 +86,34 @@ def login():
     return jsonify({'error': 'Invalid username or password'}), 401
 
 def player_to_dict(player):
+    if player.picture_data:
+        picture_data = base64.b64encode(player.picture_data).decode('utf-8')
+    else:
+        picture_data = None
     return {
         'player_id': player.id,
         'player_name': player.name,
+        'picture': picture_data
     }
 
 def team_to_dict(team):
     players_info = []
     for stats in team.players:
         player = Player.query.get(stats.player_id)
-        players_info.append({'player_id': player.id, 'player_name': player.name})
+        if player.picture_data:
+            picture_data = base64.b64encode(player.picture_data).decode('utf-8')
+        else:
+            picture_data = None
+        players_info.append({'player_id': player.id, 'player_name': player.name, 'picture': picture_data})
+    if team.picture_data:
+        team_picture_data = base64.b64encode(team.picture_data).decode('utf-8')
+    else:
+        team_picture_data = None
+    
     return {
         'team_id': team.id,
         'team_name': team.team_name,
+        'picture': team_picture_data,
         'players': players_info
     }
 
@@ -165,7 +180,6 @@ def search_players():
     name_query = request.args.get('name')
     if not name_query:
         return jsonify({'message': 'No search query provided'}), 400
-    print(name_query)
 
     # Search for players whose name contains the query, case-insensitive
     players = Player.query.filter(Player.name.ilike(f'%{name_query}%')).all()
@@ -195,7 +209,13 @@ def search_teams():
         return jsonify({'message': 'No teams found matching the search criteria'}), 404
 
     # Convert the list of player objects to a list of dictionaries
-    team_list = [{team.team_name: team.id} for team in teams]
+    team_list = []
+    for team in teams:
+        if team.picture_data:
+            team_picture_data = base64.b64encode(team.picture_data).decode('utf-8')
+        else:
+            team_picture_data = None
+        team_list.append({'id': team.id, 'name': team.team_name, 'picture': team_picture_data})
     return jsonify({'teams': team_list}), 200
 
 @app.route('/teams/<int:team_id>', methods=['GET'])
@@ -204,7 +224,13 @@ def get_team(team_id):
     team = Team.query.get(team_id)
     if not team:
         return jsonify({'message': 'Team does not exist'}), 404
-    return jsonify({'team':team_to_dict(team)}, 200)
+    
+    # Retrieve and encode the picture data if it exists
+    if team.picture_data:
+        team_picture_data = base64.b64encode(team.picture_data).decode('utf-8')
+    else:
+        team_picture_data = None
+    return jsonify({'team':team_to_dict(team), 'picture': team_picture_data}, 200)
 
 @app.route('/users/<int:userId>/favorites/players', methods=['POST'])
 @token_required
@@ -343,11 +369,17 @@ def get_top_players():
 def get_top_teams():
     # Query to get the top 5 teams with the most fans
     top_teams = db.session.query(
-        Team.id, Team.team_name, db.func.count(User_Favorite_Teams.user_id).label('fan_count')
-    ).join(User_Favorite_Teams).group_by(Team.id, Team.team_name).order_by(db.desc('fan_count')).limit(5).all()
+        Team.id, Team.team_name, Team.picture_data, db.func.count(User_Favorite_Teams.user_id).label('fan_count')
+    ).join(User_Favorite_Teams).group_by(Team.id, Team.team_name, Team.picture_data).order_by(db.desc('fan_count')).limit(5).all()
     
-    # Convert to list of dicts to make it serializable
-    result = [{'id': team.id, 'name': team.team_name, 'fan_count': team.fan_count} for team in top_teams]
+    result = []
+    for team in top_teams:
+        if team.picture_data:
+            team_picture_data = base64.b64encode(team.picture_data).decode('utf-8')
+        else:
+            team_picture_data = None
+        result.append({'id': team.id, 'name': team.team_name, 'fan_count': team.fan_count, 'picture': team_picture_data})
+
     return jsonify(result)
 
 @app.route('/')

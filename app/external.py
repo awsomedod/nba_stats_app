@@ -13,6 +13,7 @@ def get_player_all_season_average(player: Player):
         # Construct a dictionary for each season including the required details
         stats_dict = {
             'team_name': team.team_name,
+            'team_id' : season.team_id,
             'points': season.PTS,
             'pos': season.pos,
             'age': season.age,

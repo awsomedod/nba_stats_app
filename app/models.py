@@ -33,6 +33,7 @@ class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     year = db.Column(db.Integer, nullable=False)
     team_name = db.Column(db.String(255), nullable=False)
+    picture_data = db.Column(db.LargeBinary)  # New column for storing picture data
     players = db.relationship('SeasonStats', backref='team', lazy='dynamic')
     fans = db.relationship('User', secondary='user_favorite_teams', back_populates='favorite_teams')
 
