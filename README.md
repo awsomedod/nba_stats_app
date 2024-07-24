@@ -1,0 +1,2 @@
+# About SwishStats
+SwishStats is your ultimate platform for detailed and comprehensive statistics on NBA players. Stay updated with the latest stats, trends, and insights to enhance your basketball knowledge. Discover in-depth stats of your favorite players, explore team rosters, and personalize your experience by saving your top picks. Whether you're a casual fan or a stats enthusiast, StatSwish provides a seamless way to stay updated with the latest NBA action.
